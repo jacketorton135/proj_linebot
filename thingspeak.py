@@ -7,9 +7,10 @@ import pytz
 	
 class Thingspeak():
     def get_data_from_thingspeak(self, channel_id, api_read_key):
-
         url = 'https://thingspeak.com/channels/{channel_id}/feed.json?api_key={api_read_key}'.format(channel_id = channel_id,api_read_key = api_read_key)
         data = requests.get(url).json()
+        if data.get('error') == 'Not Found':
+            return 'Not Found', 'Not Found'
         time_list = list()
         entry_id_list = list()
         bpm_list = list()
@@ -22,12 +23,11 @@ class Thingspeak():
                 bpm_list.append(data.get('field1'))
 
         #換成台灣時間
-        # print(time_list)
         tw_time_list = self.format_time(time_list)
-        # print(tw_time_list)
         return tw_time_list, bpm_list
+    
+    # 解析时间字符串并转换为台湾时间
     def format_time(self, time_list):
-        # 解析时间字符串并转换为台湾时间
         taiwan_tz = pytz.timezone('Asia/Taipei')
         tw_time_list = []
         for timestamp in time_list:

@@ -48,20 +48,25 @@ def handle_message(event):
         key = data.split(',')[1]
         ts = Thingspeak()
         tw_time_list, bpm_list = ts.get_data_from_thingspeak(channel_id, key)
-        ts.gen_chart(tw_time_list, bpm_list)
-        chart_link = ts.upload_to_imgur()
-        image_message = ImageSendMessage(
-            original_content_url=chart_link,
-            preview_image_url=chart_link
-        )
-        line_bot_api.reply_message(event.reply_token, image_message)
-    else:
+        if tw_time_list == 'Not Found' or bpm_list == 'Not Found':
+            message = TextSendMessage(text="User not found")
+            line_bot_api.reply_message(event.reply_token, message)
+        else:
+            ts.gen_chart(tw_time_list, bpm_list)
+            chart_link = ts.upload_to_imgur()
+            image_message = ImageSendMessage(
+                original_content_url=chart_link,
+                preview_image_url=chart_link
+            )
+            line_bot_api.reply_message(event.reply_token, image_message)
+    else: # 學使用者說話
 
         message = TextSendMessage(text=event.message.text)
         line_bot_api.reply_message(event.reply_token, message)
-        # chart = Thingspeak().get_data_from_thingspeak()
 
 if __name__ == "__main__":
     # port = int(os.environ.get('PORT', 5001))
+    # local
     # app.run(host='0.0.0.0', port=5001)
+    # Render
     app.run()
