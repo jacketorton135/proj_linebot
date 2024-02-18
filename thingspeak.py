@@ -17,10 +17,10 @@ class Thingspeak():
         for data in data['feeds']:
             time_list.append(data.get('created_at'))
             entry_id_list.append(data.get('entry_id'))
-            if data.get('field1') == '0':
-                bpm_list.append('0.01')
-            else:
-                bpm_list.append(data.get('field1'))
+            # if data.get('field1') == '0':
+            #     bpm_list.append('0.01')
+            # else:
+            bpm_list.append(data.get('field1'))
 
         #換成台灣時間
         tw_time_list = self.format_time(time_list)
