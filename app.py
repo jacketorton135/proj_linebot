@@ -46,6 +46,7 @@ def handle_message(event):
     if check in "圖表:":
         channel_id = data.split(',')[0]
         key = data.split(',')[1]
+        print("User channel_id: ", channel_id, "key: ", key)
         ts = Thingspeak()
         tw_time_list, bpm_list = ts.get_data_from_thingspeak(channel_id, key)
         if tw_time_list == 'Not Found' or bpm_list == 'Not Found':
@@ -54,6 +55,7 @@ def handle_message(event):
         else:
             ts.gen_chart(tw_time_list, bpm_list)
             chart_link = ts.upload_to_imgur()
+            print("圖片網址", chart_link)
             image_message = ImageSendMessage(
                 original_content_url=chart_link,
                 preview_image_url=chart_link

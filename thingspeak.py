@@ -4,7 +4,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from datetime import datetime, timedelta
 import pytz
-	
+import pyimgur
+
 class Thingspeak():
     def get_data_from_thingspeak(self, channel_id, api_read_key):
         url = 'https://thingspeak.com/channels/{channel_id}/feed.json?api_key={api_read_key}'.format(channel_id = channel_id,api_read_key = api_read_key)
@@ -17,9 +18,6 @@ class Thingspeak():
         for data in data['feeds']:
             time_list.append(data.get('created_at'))
             entry_id_list.append(data.get('entry_id'))
-            # if data.get('field1') == '0':
-            #     bpm_list.append('0.01')
-            # else:
             bpm_list.append(data.get('field1'))
 
         #換成台灣時間
@@ -51,19 +49,18 @@ class Thingspeak():
         plt.savefig('chart.png', format='png')
         return 
     
+
     # 上傳圖片到 Imgur
     def upload_to_imgur(self):
-        # 上傳圖片到 Imgur
-        client_id = '1057e1ccf4ca17c'  # 替換成你的 Imgur Client ID
+        CLIENT_ID = "1057e1ccf4ca17c"
+        PATH = "chart.png" #A Filepath to an image on your computer"
+        title = "Uploaded with PyImgur"
 
-        headers = {'Authorization': 'Client-ID {}'.format(client_id)}
-        data = {'image': open('chart.png', 'rb').read()}
-        response = requests.post('https://api.imgur.com/3/image', headers=headers, data=data)
-        if response.status_code == 200:
-            return response.json()['data']['link']
-        else:
-            print('Error uploading image to Imgur')
-            return None
+        im = pyimgur.Imgur(CLIENT_ID)
+        uploaded_image = im.upload_image(PATH, title=title)
+        # print(uploaded_image.title)
+        image_url = uploaded_image.link
+        return  image_url
         
 if __name__ == "__main__":
     ts = Thingspeak()
