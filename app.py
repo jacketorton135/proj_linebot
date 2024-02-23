@@ -54,11 +54,14 @@ def handle_message(event):
             line_bot_api.reply_message(event.reply_token, message)
         else:
             ts.gen_chart(tw_time_list, bpm_list)
-            chart_link = ts.upload_to_imgur()
+            ts.update_photo_size()
+            chart_link, pre_chart_link = ts.upload_to_imgur()
             print("圖片網址", chart_link)
+            print("縮圖網址", pre_chart_link)
             image_message = ImageSendMessage(
+                type = "image",
                 original_content_url=chart_link,
-                preview_image_url=chart_link
+                preview_image_url=pre_chart_link
             )
             line_bot_api.reply_message(event.reply_token, image_message)
     else: # 學使用者說話

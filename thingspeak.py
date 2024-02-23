@@ -5,6 +5,11 @@ import numpy as np
 from datetime import datetime, timedelta
 import pytz
 import pyimgur
+from aspose.imaging import *
+from aspose.imaging.imageoptions import *
+from aspose.imaging.sources import *
+from aspose.imaging.fileformats import *
+import os
 # from imgurpython import ImgurClient
 
 
@@ -40,7 +45,7 @@ class Thingspeak():
     # 從 JSON 數據中提取數字並繪製折線圖
     def gen_chart(self, time_list, bpm_list):
         print(time_list, bpm_list)
-        plt.figure(figsize=(12, 15))  # 設置圖片尺寸為 10x6
+        plt.figure(figsize=(10, 6))  # 設置圖片尺寸為 10x6
         bpm_list = [float(value) for value in bpm_list]
         # 绘制图表
         plt.plot(time_list, bpm_list, 'r-o')
@@ -51,6 +56,15 @@ class Thingspeak():
         plt.savefig('chart.jpg', format='jpg')
         return 
     
+    def update_photo_size(self):
+        # 載入圖片
+        image = Image.load("chart.jpg")
+
+        # 調整影像大小並儲存調整後的影像
+        image.resize(240, 240);
+
+        # 儲存調整大小的影像
+        image.save("pre_chart.jpg");
 
     # 上傳圖片到 Imgur
     def upload_to_imgur(self):
@@ -60,9 +74,16 @@ class Thingspeak():
 
         im = pyimgur.Imgur(CLIENT_ID)
         uploaded_image = im.upload_image(PATH, title=title)
-        # print(uploaded_image.title)
         image_url = uploaded_image.link
-        return  image_url
+
+        pre_PATH = "pre_chart.jpg" #A Filepath to an image on your computer"
+        title = "Uploaded with pre_PyImgur"
+
+        pre_im = pyimgur.Imgur(CLIENT_ID)
+        uploaded_pre_image = pre_im.upload_image(pre_PATH, title=title)
+        # print(uploaded_image.title)
+        pre_image_url = uploaded_pre_image.link
+        return  image_url, pre_image_url
         
 if __name__ == "__main__":
     ts = Thingspeak()
