@@ -54,28 +54,8 @@ class Thingspeak():
 
     # 上傳圖片到 Imgur
     def upload_to_imgur(self):
-        # client_id = '1057e1ccf4ca17c'
-        # client_secret = '4207a25500bd516266c39c3f831ab8da7d47d0a1'
-
-        # client = ImgurClient(client_id, client_secret)
-
-        # # Example request
-        # items = client.gallery()
-        # for item in items:
-        #     print(item.link)
-        # # Authorization flow, pin example (see docs for other auth types)
-        # authorization_url = client.get_auth_url('pin')
-
-        # # ... redirect user to `authorization_url`, obtain pin (or code or token) ...
-
-        # credentials = client.authorize(authorization_url, 'pin')
-        # client.set_user_auth(credentials['access_token'], credentials['refresh_token'])
-
-        # # client.set_user_auth(credentials['acc/ess_token'], credentials['refresh_token'])
-
-        # return item.link
         CLIENT_ID = "1057e1ccf4ca17c"
-        PATH = "chart.png" #A Filepath to an image on your computer"
+        PATH = "chart.jpg" #A Filepath to an image on your computer"
         title = "Uploaded with PyImgur"
 
         im = pyimgur.Imgur(CLIENT_ID)
