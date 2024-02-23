@@ -67,17 +67,34 @@ class Thingspeak():
 
         im = pyimgur.Imgur(CLIENT_ID)
         uploaded_image = im.upload_image(PATH, title=title)
-        pre_image_url = uploaded_image.link
+        image_url = uploaded_image.link
 
-        pre_PATH = "pre_chart.png" #A Filepath to an image on your computer"
+        PATH = "pre_chart.png" #A Filepath to an image on your computer"
         title = "Uploaded with pre_PyImgur"
 
         pre_im = pyimgur.Imgur(CLIENT_ID)
-        uploaded_pre_image = pre_im.upload_image(pre_PATH, title=title)
+        uploaded_pre_image = pre_im.upload_image(PATH, title=title)
         # print(uploaded_image.title)
         pre_image_url = uploaded_pre_image.link
-        return  pre_image_url, pre_image_url
+        return  image_url, pre_image_url
+    
+    # # 上傳圖片到 Imgur
+    # def upload_to_imgur(self):
+    #     CLIENT_ID = "1057e1ccf4ca17c"
+    #     PATH = "pre_chart.png" #A Filepath to an image on your computer"
+    #     title = "Uploaded with pre_PyImgur"
+        
+    #     pre_im = pyimgur.Imgur(CLIENT_ID)
+    #     uploaded_pre_image = pre_im.upload_image(PATH, title=title)
+    #     # print(uploaded_image.title)
+    #     pre_image_url = uploaded_pre_image.link
+    #     return  pre_image_url, pre_image_url
         
 if __name__ == "__main__":
+    # input:  "圖表:2374700,2KNDBSF9FN4M5EY1"
     ts = Thingspeak()
+    tw_time_list, bpm_list=ts.get_data_from_thingspeak("2374700","2KNDBSF9FN4M5EY1")
+    ts.gen_chart(tw_time_list, bpm_list)
     ts.update_photo_size()
+    chart_link, pre_chart_link = ts.upload_to_imgur()
+    print(chart_link, pre_chart_link)
