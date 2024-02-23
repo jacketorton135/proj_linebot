@@ -51,25 +51,25 @@ class Thingspeak():
         plt.ylabel('BPM')
         plt.title('Thingspeak')
         plt.xticks(rotation=45)
-        plt.savefig('chart.png', format='png')
+        plt.savefig('chart.jpg', format='jpg')
         return 
     
     def update_photo_size(self):
-        img = Image.open('chart.png')   # 開啟圖片
+        img = Image.open('chart.jpg')   # 開啟圖片
         img2 = img.resize((240,240))       # 調整圖片尺寸為 200x200
-        img2.save('pre_chart.png')   
+        img2.save('pre_chart.jpg')   
 
     # 上傳圖片到 Imgur
     def upload_to_imgur(self):
         CLIENT_ID = "1057e1ccf4ca17c"
-        PATH = "chart.png" #A Filepath to an image on your computer"
+        PATH = "chart.jpg" #A Filepath to an image on your computer"
         title = "Uploaded with PyImgur"
 
         im = pyimgur.Imgur(CLIENT_ID)
         uploaded_image = im.upload_image(PATH, title=title)
         image_url = uploaded_image.link
 
-        PATH = "pre_chart.png" #A Filepath to an image on your computer"
+        PATH = "pre_chart.jpg" #A Filepath to an image on your computer"
         title = "Uploaded with pre_PyImgur"
 
         pre_im = pyimgur.Imgur(CLIENT_ID)
