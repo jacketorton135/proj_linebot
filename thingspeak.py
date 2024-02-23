@@ -5,11 +5,9 @@ import numpy as np
 from datetime import datetime, timedelta
 import pytz
 import pyimgur
-from aspose.imaging import *
-from aspose.imaging.imageoptions import *
-from aspose.imaging.sources import *
-from aspose.imaging.fileformats import *
-import os
+
+from PIL import Image
+
 # from imgurpython import ImgurClient
 
 
@@ -53,38 +51,33 @@ class Thingspeak():
         plt.ylabel('BPM')
         plt.title('Thingspeak')
         plt.xticks(rotation=45)
-        plt.savefig('chart.jpg', format='jpg')
+        plt.savefig('chart.png', format='png')
         return 
     
     def update_photo_size(self):
-        # 載入圖片
-        image = Image.load("chart.jpg")
-
-        # 調整影像大小並儲存調整後的影像
-        image.resize(240, 240);
-
-        # 儲存調整大小的影像
-        image.save("pre_chart.jpg");
+        img = Image.open('chart.png')   # 開啟圖片
+        img2 = img.resize((240,240))       # 調整圖片尺寸為 200x200
+        img2.save('pre_chart.png')   
 
     # 上傳圖片到 Imgur
     def upload_to_imgur(self):
         CLIENT_ID = "1057e1ccf4ca17c"
-        PATH = "chart.jpg" #A Filepath to an image on your computer"
+        PATH = "chart.png" #A Filepath to an image on your computer"
         title = "Uploaded with PyImgur"
 
         im = pyimgur.Imgur(CLIENT_ID)
         uploaded_image = im.upload_image(PATH, title=title)
-        image_url = uploaded_image.link
+        pre_image_url = uploaded_image.link
 
-        pre_PATH = "pre_chart.jpg" #A Filepath to an image on your computer"
+        pre_PATH = "pre_chart.png" #A Filepath to an image on your computer"
         title = "Uploaded with pre_PyImgur"
 
         pre_im = pyimgur.Imgur(CLIENT_ID)
         uploaded_pre_image = pre_im.upload_image(pre_PATH, title=title)
         # print(uploaded_image.title)
         pre_image_url = uploaded_pre_image.link
-        return  image_url, pre_image_url
+        return  pre_image_url, pre_image_url
         
 if __name__ == "__main__":
     ts = Thingspeak()
-    ts.get_data_from_thingspeak()
+    ts.update_photo_size()
