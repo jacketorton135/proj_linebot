@@ -59,8 +59,7 @@ def handle_message(event):
             print("圖片網址", chart_link)
             print("縮圖網址", pre_chart_link)
             image_message = ImageSendMessage(
-                type = "image",
-                original_content_url=chart_link,
+                original_content_url=pre_chart_link,
                 preview_image_url=pre_chart_link
             )
             line_bot_api.reply_message(event.reply_token, image_message)
