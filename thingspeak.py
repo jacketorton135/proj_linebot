@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from datetime import datetime, timedelta
 import pytz
-import pyimgur
+# import pyimgur
 from imgurpython import ImgurClient
 
 
