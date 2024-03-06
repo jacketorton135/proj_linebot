@@ -1,3 +1,4 @@
+import os
 import requests
 import json
 import matplotlib.pyplot as plt
@@ -59,29 +60,9 @@ class Thingspeak():
         img2 = img.resize((240,240))       # 調整圖片尺寸為 200x200
         img2.save('pre_chart.jpg')   
 
-    # def upload(self):
-    #     client_id = '1057e1ccf4ca17c'
-    #     client_secret = 'da1c1a1c8abcc78e9deada7985f9910d4c51de63'
-    #     access_token = 'zesmpgsWsUy3JJtv+giJb/4cDV3L3g3JGrSodEArwQwpHJadCUTrhk6EEfQ5WzjImdeR4EWvMrzi+VQVvyY2oE9pOJUuTGYiXGdh06vPgn7tp3OSZ1asIvaSURETV+u6f8OheWISM9V32C6wxwj7YgdB04t89/1O/w1cDnyilFU='
-
-    #     config = {
-    #         'album': "nToIcUv",
-    #         'name': "test_name",
-    #         'title': "test_title",
-    #         'description': 'description'
-    #     }
-
-    #     client = ImgurClient(client_id, client_secret, access_token)
-    #     print("Uploading image... ")
-    #     image = client.upload_from_path('chart.jpg', config=config, anon=False)
-    #     client.
-    #     print(f"圖片網址: {image['link']}")
-    #     print("Done")
-    #     return image
     # 上傳圖片到 Imgur
     def upload_to_imgur(self):
-
-        CLIENT_ID = "1057e1ccf4ca17c"
+        CLIENT_ID = os.environ.get('IMGUR_CLIENT_ID')
         PATH = "chart.jpg" #A Filepath to an image on your computer"
         title = "Uploaded with PyImgur"
 
@@ -100,11 +81,8 @@ class Thingspeak():
 
         
 if __name__ == "__main__":
-    # input:  "圖表:2374700,2KNDBSF9FN4M5EY1"
     ts = Thingspeak()
     tw_time_list, bpm_list=ts.get_data_from_thingspeak("2374700","2KNDBSF9FN4M5EY1")
     ts.gen_chart(tw_time_list, bpm_list)
     ts.update_photo_size()
     ts.upload()
-    # chart_link, pre_chart_link = ts.upload_to_imgur()
-    # print(chart_link, pre_chart_link)

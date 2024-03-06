@@ -1,5 +1,5 @@
 from flask import Flask, request, abort
-
+import os
 from linebot import (
     LineBotApi, WebhookHandler
 )
@@ -13,11 +13,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 app = Flask(__name__)
-
+line_bot_api_key = os.environ.get('LINE_CHANNEL_ACCESS_TOKEN')
+line_bot_secret_key = os.environ.get('LINE_CHANNEL_SECRET_KEY')
 # Channel Access Token
-line_bot_api = LineBotApi('zesmpgsWsUy3JJtv+giJb/4cDV3L3g3JGrSodEArwQwpHJadCUTrhk6EEfQ5WzjImdeR4EWvMrzi+VQVvyY2oE9pOJUuTGYiXGdh06vPgn7tp3OSZ1asIvaSURETV+u6f8OheWISM9V32C6wxwj7YgdB04t89/1O/w1cDnyilFU=')
+line_bot_api = LineBotApi(line_bot_api_key)
 # Channel Secret
-handler = WebhookHandler('1b973f1211a9861d3a71bb6674dfc1bb')
+handler = WebhookHandler(line_bot_secret_key)
 
 # 監聽所有來自 /callback 的 Post Request
 @app.route("/callback", methods=['POST'])
