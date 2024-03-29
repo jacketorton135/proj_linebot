@@ -71,7 +71,7 @@ def handle_message(event):
         client = OpenAI(api_key=openai_api_key)
 
         completion = client.chat.completions.create(
-            model="gpt-3.5-turbo",
+            model="whisper-1",
             messages=[
                 {
                     "role": "user",
