@@ -25,6 +25,13 @@ openai_api_key = os.environ.get('OPEN_AI_KEY')
 # Auth User list
 auth_user_list = os.environ.get('AUTH_USER_LIST')  # string
 auth_user_list = auth_user_list.split(',')  #list
+print('auth_user_list', auth_user_list)
+
+# U5583a266be8eb6b47ad9fa7d96846c80
+# Auth User list
+auth_user_ai_list = os.environ.get('AUTH_AI_USER_LIST')  # string
+auth_user_ai_list = auth_user_ai_list.split(',')  #list
+print('auth_user_ai_list', auth_user_ai_list)
 
 
 # 監聽所有來自 /callback 的 Post Request
@@ -47,9 +54,7 @@ def callback():
 # 處理訊息
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
-    print(event)
-    print(type(event))
-    get_request_user_id = event['source']['userId']
+    get_request_user_id = line_bot_api.get_profile('<user_id>')
     input_msg = event.message.text
     check = input_msg[:3].lower()
     user_msg = input_msg[3:]  # 2374700,2KNDBSF9FN4M5EY1
@@ -76,7 +81,7 @@ def handle_message(event):
             image_message = ImageSendMessage(original_content_url=chart_link,
                                              preview_image_url=pre_chart_link)
             line_bot_api.reply_message(event.reply_token, image_message)
-    elif check == 'ai:':
+    elif check == 'ai:' and get_request_user_id in auth_user_ai_list:
         client = OpenAI(api_key=openai_api_key)
 
         completion = client.chat.completions.create(
