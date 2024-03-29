@@ -48,7 +48,7 @@ def callback():
 # 處理訊息
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
-    get_request_user_id = event.source.userId
+    get_request_user_id = event['source']['userId']
     input_msg = event.message.text
     check = input_msg[:3].lower()
     user_msg = input_msg[3:]  # 2374700,2KNDBSF9FN4M5EY1
