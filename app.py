@@ -54,7 +54,10 @@ def callback():
 # 處理訊息
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
-    get_request_user_id = line_bot_api.get_profile('<user_id>')
+    print('event.message', event.message)
+    get_request_user_id = event.source.user_id
+    print(get_request_user_id)
+    # get_request_user_id = line_bot_api.get_profile('user_id')
     input_msg = event.message.text
     check = input_msg[:3].lower()
     user_msg = input_msg[3:]  # 2374700,2KNDBSF9FN4M5EY1
