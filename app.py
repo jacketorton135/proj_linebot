@@ -101,9 +101,9 @@ def handle_message(event):
                     ],  
                 )
                 reply_msg = response.choices[0].message.content
-                print('reply_msg', type(reply_msg))
                 print('reply_msg', reply_msg)
-                line_bot_api.reply_message(event.reply_token, str(reply_msg))
+                message = TextSendMessage(text=reply_msg)
+                line_bot_api.reply_message(event.reply_token, message)
             except Exception as e:
                 print(e)
         else:  # 學使用者說話
