@@ -100,8 +100,9 @@ def handle_message(event):
                 ],  
             )
             reply_msg = response.choices[0].message.content
+            print('reply_msg', type(reply_msg))
             print('reply_msg', reply_msg)
-            line_bot_api.reply_message(event.reply_token, reply_msg)
+            line_bot_api.reply_message(event.reply_token, str(reply_msg))
 
         else:  # 學使用者說話
 
