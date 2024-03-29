@@ -22,6 +22,12 @@ handler = WebhookHandler(line_bot_secret_key)
 openai_api_key = os.environ.get('OPEN_AI_KEY')
 
 
+# U5583a266be8eb6b47ad9fa7d96846c80
+# Auth User list
+auth_user_list = os.environ.get('AUTH_USER_LIST')  # string
+auth_user_list = auth_user_list.split(',')  #list
+
+
 # 監聽所有來自 /callback 的 Post Request
 @app.route("/callback", methods=['POST'])
 def callback():
@@ -42,13 +48,15 @@ def callback():
 # 處理訊息
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
-    print('event', event)
+    get_request_user_id = event.source.userId
     input_msg = event.message.text
     check = input_msg[:3].lower()
     user_msg = input_msg[3:]  # 2374700,2KNDBSF9FN4M5EY1
     print('check', check)
     print('user_msg', user_msg)
-
+    if get_request_user_id not in auth_user_list:
+        message = TextSendMessage(text='使用者沒有權限')
+        line_bot_api.reply_message(event.reply_token, message)
     if check in "圖表:":
         channel_id = user_msg.split(',')[0]
         key = user_msg.split(',')[1]
