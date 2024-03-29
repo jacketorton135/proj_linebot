@@ -86,7 +86,7 @@ def handle_message(event):
         elif check == 'ai:' and get_request_user_id in auth_user_ai_list:
             client = OpenAI(api_key=openai_api_key)
 
-            completion = client.chat.completions.create(
+            response = client.chat.completions.create(
                 model="gpt-3.5-turbo-0125",
                 messages=[
                     {
@@ -99,7 +99,8 @@ def handle_message(event):
                     },
                 ],
             )
-            reply_msg = completion.choices[0].message.content
+            print(response)
+            reply_msg = response["choices"][0]["text"].replace('\n','')
             line_bot_api.reply_message(event.reply_token, reply_msg)
 
         else:  # 學使用者說話
