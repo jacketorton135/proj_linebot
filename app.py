@@ -84,26 +84,28 @@ def handle_message(event):
                     preview_image_url=pre_chart_link)
                 line_bot_api.reply_message(event.reply_token, image_message)
         elif check == 'ai:' and get_request_user_id in auth_user_ai_list:
-            client = OpenAI(api_key=openai_api_key)
+            try:
+                client = OpenAI(api_key=openai_api_key)
 
-            response = client.chat.completions.create(
-                model="gpt-3.5-turbo-0125",
-                messages=[
-                    {
-                        "role": "system",
-                        "content": "如果回答問題盡可能用簡潔的話回復"
-                    },
-                    {
-                        "role": "user",
-                        "content": user_msg,
-                    },
-                ],  
-            )
-            reply_msg = response.choices[0].message.content
-            print('reply_msg', type(reply_msg))
-            print('reply_msg', reply_msg)
-            line_bot_api.reply_message(event.reply_token, str(reply_msg))
-
+                response = client.chat.completions.create(
+                    model="gpt-3.5-turbo-0125",
+                    messages=[
+                        {
+                            "role": "system",
+                            "content": "如果回答問題盡可能用簡潔的話回復"
+                        },
+                        {
+                            "role": "user",
+                            "content": user_msg,
+                        },
+                    ],  
+                )
+                reply_msg = response.choices[0].message.content
+                print('reply_msg', type(reply_msg))
+                print('reply_msg', reply_msg)
+                line_bot_api.reply_message(event.reply_token, str(reply_msg))
+            except Exception as e:
+                print(e)
         else:  # 學使用者說話
 
             message = TextSendMessage(text=event.message.text)
