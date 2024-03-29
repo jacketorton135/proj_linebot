@@ -71,8 +71,14 @@ def handle_message(event):
         client = OpenAI(api_key=openai_api_key)
 
         completion = client.chat.completions.create(
-            model="whisper-1",
+            model="gpt-3.5-turbo-0125",
             messages=[
+                {
+                    "role":
+                    "system",
+                    "content":
+                    "如果回答問題盡可能用簡潔的話回復"
+                },
                 {
                     "role": "user",
                     "content": user_msg,
