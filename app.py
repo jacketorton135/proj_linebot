@@ -42,7 +42,7 @@ def callback():
 # 處理訊息
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
-
+    print('event', event)
     input_msg = event.message.text
     check = input_msg[:3].lower()
     user_msg = input_msg[3:]  # 2374700,2KNDBSF9FN4M5EY1
@@ -74,10 +74,8 @@ def handle_message(event):
             model="gpt-3.5-turbo-0125",
             messages=[
                 {
-                    "role":
-                    "system",
-                    "content":
-                    "如果回答問題盡可能用簡潔的話回復"
+                    "role": "system",
+                    "content": "如果回答問題盡可能用簡潔的話回復"
                 },
                 {
                     "role": "user",
