@@ -97,10 +97,10 @@ def handle_message(event):
                         "role": "user",
                         "content": user_msg,
                     },
-                ],
+                ],  
             )
             # print(type(response))
-            reply_msg = response.choices[0].message
+            reply_msg = response.choices[0].message.content
             line_bot_api.reply_message(event.reply_token, response)
 
         else:  # 學使用者說話
