@@ -1,5 +1,5 @@
 import json
-import openai
+from openai import OpenAI
 from flask import Flask, request, abort
 import os
 from linebot import (LineBotApi, WebhookHandler)
@@ -19,7 +19,7 @@ line_bot_api = LineBotApi(line_bot_api_key)
 handler = WebhookHandler(line_bot_secret_key)
 
 # Open AI key
-openai.api_key = os.environ.get('OPEN_AI_KEY')
+openai_api_key = os.environ.get('OPEN_AI_KEY')
 
 
 # 監聽所有來自 /callback 的 Post Request
@@ -43,15 +43,16 @@ def callback():
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
 
-    user_msg = event.message.text
-    check = user_msg[:3].lower()
-    user_msg = user_msg[3:]  # 2374700,2KNDBSF9FN4M5EY1
+    input_msg = event.message.text
+    check = input_msg[:3].lower()
+    user_msg = input_msg[3:]  # 2374700,2KNDBSF9FN4M5EY1
     print('check', check)
     print('user_msg', user_msg)
+
     if check in "圖表:":
         channel_id = user_msg.split(',')[0]
         key = user_msg.split(',')[1]
-        print("User channel_id: ", channel_id, "key: ", key)
+        print("User channel_id: ", channel_id, "Read_key: ", key)
         ts = Thingspeak()
         tw_time_list, bpm_list = ts.get_data_from_thingspeak(channel_id, key)
         if tw_time_list == 'Not Found' or bpm_list == 'Not Found':
@@ -67,13 +68,18 @@ def handle_message(event):
                                              preview_image_url=pre_chart_link)
             line_bot_api.reply_message(event.reply_token, image_message)
     elif check == 'ai:':
-        # 將第六個字元之後的訊息發送給 OpenAI
-        response = openai.ChatCompletion.create(model="gpt-3.5-turbo",
-                                                max_tokens=128,
-                                                temperature=0.5,
-                                                messages=user_msg)
-        # 接收到回覆訊息後，移除換行符號
-        reply_msg = response["choices"][0]["text"].replace('\n', '')
+        client = OpenAI(api_key=openai_api_key)
+
+        completion = client.chat.completions.create(
+            model="gpt-4",
+            messages=[
+                {
+                    "role": "user",
+                    "content": user_msg,
+                },
+            ],
+        )
+        reply_msg = completion.choices[0].message.content
         line_bot_api.reply_message(event.reply_token, reply_msg)
 
     else:  # 學使用者說話
