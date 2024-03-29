@@ -21,7 +21,6 @@ handler = WebhookHandler(line_bot_secret_key)
 # Open AI key
 openai_api_key = os.environ.get('OPEN_AI_KEY')
 
-
 # U5583a266be8eb6b47ad9fa7d96846c80
 # Auth User list
 auth_user_list = os.environ.get('AUTH_USER_LIST')  # string
@@ -48,6 +47,8 @@ def callback():
 # 處理訊息
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
+    print(event)
+    print(type(event))
     get_request_user_id = event['source']['userId']
     input_msg = event.message.text
     check = input_msg[:3].lower()
