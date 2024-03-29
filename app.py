@@ -99,8 +99,8 @@ def handle_message(event):
                     },
                 ],
             )
-            print(response)
-            reply_msg = response["choices"][0]["text"].replace('\n','')
+            print(type(response))
+            reply_msg = response.json()["choices"][0]["text"]
             line_bot_api.reply_message(event.reply_token, reply_msg)
 
         else:  # 學使用者說話
