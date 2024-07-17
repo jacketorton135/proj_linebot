@@ -1,15 +1,18 @@
-import boto3
-import json
-from openai import OpenAI
-from flask import Flask, request, abort
 import os
-from linebot import (LineBotApi, WebhookHandler)
-from linebot.exceptions import (InvalidSignatureError)
+import requests
+import json
+from flask import Flask, request, abort
+from linebot import LineBotApi, WebhookHandler
+from linebot.exceptions import InvalidSignatureError
 from linebot.models import *
 from io import BytesIO
 from thingspeak import Thingspeak
+import boto3
 import matplotlib.pyplot as plt
 import numpy as np
+from dotenv import load_dotenv
+
+load_dotenv()  # Load environment variables from .env file
 
 app = Flask(__name__)
 line_bot_api_key = os.environ.get('LINE_CHANNEL_ACCESS_TOKEN')
@@ -25,22 +28,19 @@ handler = WebhookHandler(line_bot_secret_key)
 # Open AI key
 openai_api_key = os.environ.get('OPEN_AI_KEY')
 
-# U5583a266be8eb6b47ad9fa7d96846c80
 # Auth User list
 auth_user_list = os.environ.get('AUTH_USER_LIST')  # string
-auth_user_list = auth_user_list.split(',')  #list
+auth_user_list = auth_user_list.split(',')  # list
 print('auth_user_list', auth_user_list)
 
-# U5583a266be8eb6b47ad9fa7d96846c80
 # Auth AI User list
 auth_user_ai_list = os.environ.get('AUTH_AI_USER_LIST')  # string
-auth_user_ai_list = auth_user_ai_list.split(',')  #list
+auth_user_ai_list = auth_user_ai_list.split(',')  # list
 print('auth_user_ai_list', auth_user_ai_list)
 
-# U5583a266be8eb6b47ad9fa7d96846c80
 # Auth AWS User list
 auth_user_aws_list = os.environ.get('AUTH_AWS_USER_LIST')  # string
-auth_user_aws_list = auth_user_aws_list.split(',')  #list
+auth_user_aws_list = auth_user_aws_list.split(',')  # list
 print('auth_user_aws_list', auth_user_aws_list)
 
 
@@ -115,27 +115,28 @@ def handle_message(event):
     print('check', check)
     print('user_msg', user_msg)
     if get_request_user_id in auth_user_list:
-
         if check in "圖表:":
             channel_id = user_msg.split(',')[0]
             key = user_msg.split(',')[1]
             print("User channel_id: ", channel_id, "Read_key: ", key)
             ts = Thingspeak()
-            tw_time_list, bpm_list = ts.get_data_from_thingspeak(
-                channel_id, key)
-            if tw_time_list == 'Not Found' or bpm_list == 'Not Found':
+            tw_time_list, field_data = ts.get_data_from_thingspeak(channel_id, key)
+            if tw_time_list == 'Not Found' or field_data == 'Not Found':
                 message = TextSendMessage(text="User not found")
                 line_bot_api.reply_message(event.reply_token, message)
             else:
-                ts.gen_chart(tw_time_list, bpm_list)
-                ts.update_photo_size()
-                chart_link, pre_chart_link = ts.upload_to_imgur()
-                print("圖片網址", chart_link)
-                print("縮圖網址", pre_chart_link)
-                image_message = ImageSendMessage(
-                    original_content_url=chart_link,
-                    preview_image_url=pre_chart_link)
-                line_bot_api.reply_message(event.reply_token, image_message)
+                messages = []
+                for i in range(1, 6):
+                    field_name = f'field{i}'
+                    chart_filename = ts.gen_chart(tw_time_list, field_data, field_name)
+                    image_url, pre_image_url = ts.upload_to_imgur(chart_filename)
+                    print(f'{field_name} Image URL: {image_url}')
+                    print(f'{field_name} Pre Image URL: {pre_image_url}')
+                    image_message = ImageSendMessage(
+                        original_content_url=image_url,
+                        preview_image_url=pre_image_url)
+                    messages.append(image_message)
+                line_bot_api.reply_message(event.reply_token, messages)
         elif check == 'ai:' and get_request_user_id in auth_user_ai_list:
             try:
                 client = OpenAI(api_key=openai_api_key)
@@ -160,7 +161,6 @@ def handle_message(event):
             except Exception as e:
                 print(e)
         else:  # 學使用者說話
-
             message = TextSendMessage(text=event.message.text)
             line_bot_api.reply_message(event.reply_token, message)
     else:
@@ -169,8 +169,4 @@ def handle_message(event):
 
 
 if __name__ == "__main__":
-    # port = int(os.environ.get('PORT', 5001))
-    # local
-    # app.run(host='0.0.0.0', port=5001)
-    # Render
     app.run()
