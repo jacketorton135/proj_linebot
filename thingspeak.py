@@ -93,12 +93,25 @@ class Thingspeak:
         
         return image_url, pre_image_url
 
+    def process_and_upload_all_fields(self, channel_id, api_read_key):
+        tw_time_list, field_data = self.get_data_from_thingspeak(channel_id, api_read_key)
+        if tw_time_list == 'Not Found' or field_data == 'Not Found':
+            return 'Not Found', 'Not Found'
+        
+        results = {}
+        for i in range(1, 6):
+            field_name = f'field{i}'
+            chart_filename = self.gen_chart(tw_time_list, field_data, field_name)
+            image_url, pre_image_url = self.upload_to_imgur(chart_filename)
+            results[field_name] = {
+                'image_url': image_url,
+                'pre_image_url': pre_image_url
+            }
+        return results
+
 if __name__ == "__main__":
     ts = Thingspeak()
-    tw_time_list, field_data = ts.get_data_from_thingspeak("2466473", "GROLYCVTU08JWN8Q")
-    for i in range(1, 6):
-        field_name = f'field{i}'
-        chart_filename = ts.gen_chart(tw_time_list, field_data, field_name)
-        image_url, pre_image_url = ts.upload_to_imgur(chart_filename)
-        print(f'{field_name} Image URL: {image_url}')
-        print(f'{field_name} Pre Image URL: {pre_image_url}')
+    results = ts.process_and_upload_all_fields("2466473", "GROLYCVTU08JWN8Q")
+    for field, urls in results.items():
+        print(f'{field} Image URL: {urls["image_url"]}')
+        print(f'{field} Pre Image URL: {urls["pre_image_url"]}')
