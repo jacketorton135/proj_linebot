@@ -8,7 +8,6 @@ import pytz
 import pyimgur
 from imgurpython import ImgurClient
 from PIL import Image
-import openai
 
 class Thingspeak():
     def get_data_from_thingspeak(self, channel_id, api_read_key):
@@ -75,16 +74,6 @@ class Thingspeak():
         pre_image_url = uploaded_pre_image.link
         
         return image_url, pre_image_url
-    
-    def generate_image_from_text(self, prompt):
-        openai.api_key = os.getenv('OPENAI_API_KEY')
-        response = openai.Image.create(
-            prompt=prompt,
-            n=1,
-            size="512x512"
-        )
-        image_url = response['data'][0]['url']
-        return image_url
 
 if __name__ == "__main__":
     ts = Thingspeak()
@@ -94,8 +83,3 @@ if __name__ == "__main__":
     image_url, pre_image_url = ts.upload_to_imgur()
     print(f'Image URL: {image_url}')
     print(f'Pre Image URL: {pre_image_url}')
-    
-    # Example of generating an image from text
-    prompt = "A beautiful sunrise over a mountain range"
-    generated_image_url = ts.generate_image_from_text(prompt)
-    print(f'Generated Image URL: {generated_image_url}')
