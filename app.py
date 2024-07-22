@@ -35,22 +35,30 @@ def handle_message(event):
     input_msg = event.message.text
     check = input_msg[:3].lower()
     user_msg = input_msg[3:]
-    
+
     if get_request_user_id in auth_user_list:
-        if check in "圖表:":
-            channel_id, key = user_msg.split(',')
-            ts = Thingspeak()
-            results = ts.process_and_upload_all_fields(channel_id, key)
-            if results == 'Not Found':
-                message = TextSendMessage(text="User not found")
-                line_bot_api.reply_message(event.reply_token, message)
-            else:
-                for field, urls in results.items():
+        if check == "圖表:":
+            try:
+                channel_id, field_name, key = user_msg.split(',')
+                ts = Thingspeak()
+                tw_time_list, field_data = ts.get_data_from_thingspeak(channel_id, key)
+                if tw_time_list == 'Not Found' or field_data == 'Not Found':
+                    message = TextSendMessage(text="資料不存在")
+                    line_bot_api.reply_message(event.reply_token, message)
+                else:
+                    chart_filename = ts.gen_chart(tw_time_list, field_data, field_name)
+                    image_url, pre_image_url = ts.upload_to_imgur(chart_filename)
                     image_message = ImageSendMessage(
-                        original_content_url=urls['image_url'],
-                        preview_image_url=urls['pre_image_url']
+                        original_content_url=image_url,
+                        preview_image_url=pre_image_url
                     )
                     line_bot_api.reply_message(event.reply_token, image_message)
+            except ValueError:
+                message = TextSendMessage(text="請輸入正確的格式：圖表:channel_id,field_name,key")
+                line_bot_api.reply_message(event.reply_token, message)
+        else:
+            message = TextSendMessage(text="無效的請求")
+            line_bot_api.reply_message(event.reply_token, message)
     else:
         message = TextSendMessage(text='使用者沒有權限')
         line_bot_api.reply_message(event.reply_token, message)
