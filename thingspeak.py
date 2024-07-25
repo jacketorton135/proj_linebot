@@ -16,10 +16,20 @@ class Thingspeak():
             return 'Not Found', 'Not Found'
         time_list = list()
         entry_id_list = list()
+        bpm_list = list()
+        溫度_list = list()
+        濕度_list = list()
+        體溫_list = list()
+        ECG_list = list()
         field_list = list()
         for data_point in data['feeds']:
             time_list.append(data_point.get('created_at'))
             entry_id_list.append(data_point.get('entry_id'))
+            bpm_list.append(data_point.get('field1'))
+            溫度_list.append(data_point.get('field2'))
+            濕度_list.append(data_point.get('field3'))
+            體溫_list.append(data_point.get('field4'))
+            ECG_list.append(data_point.get('field5'))
             field_list.append(data_point.get(field))
 
         # 換成台灣時間
@@ -41,7 +51,7 @@ class Thingspeak():
     def gen_chart(self, time_list, field_list):
         print(time_list, field_list)
         plt.figure(figsize=(12, 15))  # 設置圖片尺寸為 10x6
-        field_list = [float(value) for value in field_list]
+        field_list = [float(value) if value is not None else 0 for value in field_list]
         # 繪製圖表
         plt.plot(time_list, field_list, 'r-o')
         plt.xlabel('Time')
