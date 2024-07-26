@@ -14,9 +14,7 @@ line_bot_api_key = os.environ.get('LINE_CHANNEL_ACCESS_TOKEN')
 line_bot_secret_key = os.environ.get('LINE_CHANNEL_SECRET_KEY')
 openai_api_key = os.environ.get('OPENAI_API_KEY')
 
-# 检查环境变量是否正确设置
-if not line_bot_api_key or not line_bot_secret_key or not openai_api_key:
-    raise EnvironmentError("LINE_CHANNEL_ACCESS_TOKEN, LINE_CHANNEL_SECRET_KEY, or OPENAI_API_KEY not set")
+
 
 # Channel Access Token
 line_bot_api = LineBotApi(line_bot_api_key)
@@ -29,7 +27,7 @@ auth_user_ai_list = os.environ.get('AUTH_USER_AI_LIST', '').split(',')
 print('auth_user_list', auth_user_list)
 print('auth_user_ai_list', auth_user_ai_list)
 
-# 監聽所有來自 /callback 的 Post Request
+# 监听所有来自 /callback 的 Post Request
 @app.route("/callback", methods=['POST'])
 def callback():
     # get X-Line-Signature header value
@@ -44,7 +42,7 @@ def callback():
         abort(400)
     return 'OK'
 
-# 處理消息
+# 处理消息
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
     get_request_user_id = event.source.user_id
@@ -67,13 +65,13 @@ def handle_message(event):
             else:
                 ts.gen_chart(tw_time_list, bpm_list, temperature_list, humidity_list, body_temperature_list, ECG_list)
                 ts.update_photo_size()
-                chart_link, pre_chart_link = ts.upload_to_imgur()
-                print("圖片網址", chart_link)
-                print("縮圖網址", pre_chart_link)
-                image_message = ImageSendMessage(
-                    original_content_url=chart_link,
-                    preview_image_url=pre_chart_link)
-                line_bot_api.reply_message(event.reply_token, image_message)
+                chart_links, pre_chart_links = ts.upload_to_imgur()
+                print("圖片網址", chart_links)
+                print("縮圖網址", pre_chart_links)
+
+                messages = [ImageSendMessage(original_content_url=chart_link, preview_image_url=pre_chart_link)
+                            for chart_link, pre_chart_link in zip(chart_links, pre_chart_links)]
+                line_bot_api.reply_message(event.reply_token, messages)
         elif check == 'ai:' and get_request_user_id in auth_user_ai_list:
             try:
                 openai.api_key = openai_api_key
@@ -91,11 +89,11 @@ def handle_message(event):
                 print(e)
                 message = TextSendMessage(text='Error with OpenAI API')
                 line_bot_api.reply_message(event.reply_token, message)
-        else:  # 學使用者說話
+        else:  # 学使用者说话
             message = TextSendMessage(text=event.message.text)
             line_bot_api.reply_message(event.reply_token, message)
     else:
-        message = TextSendMessage(text='使用者没有權限')
+        message = TextSendMessage(text='使用者沒有權限')
         line_bot_api.reply_message(event.reply_token, message)
 
 if __name__ == "__main__":
