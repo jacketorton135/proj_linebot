@@ -12,6 +12,10 @@ app = Flask(__name__)
 line_bot_api_key = os.environ.get('LINE_CHANNEL_ACCESS_TOKEN')
 line_bot_secret_key = os.environ.get('LINE_CHANNEL_SECRET_KEY')
 
+# 打印环境变量以进行调试
+print(f"LINE_CHANNEL_ACCESS_TOKEN: {line_bot_api_key}")
+print(f"LINE_CHANNEL_SECRET_KEY: {line_bot_secret_key}")
+
 # 检查环境变量是否正确设置
 if not line_bot_api_key or not line_bot_secret_key:
     raise EnvironmentError("LINE_CHANNEL_ACCESS_TOKEN or LINE_CHANNEL_SECRET_KEY not set")
