@@ -1,15 +1,8 @@
-services:
-  - type: web
-    name: line-bot-thingspeak
-    env: python
-    buildCommand: "pip install -r requirements.txt"
-    startCommand: "python app.py"
-    envVars:
-      - key: LINE_CHANNEL_ACCESS_TOKEN
-        value: <your-line-channel-access-token>
-      - key: LINE_CHANNEL_SECRET_KEY
-        value: <your-line-channel-secret-key>
-      - key: AUTH_USER_LIST
-        value: <your-auth-user-list>
-      - key: IMGUR_CLIENT_ID
-        value: <your-imgur-client-id>
+# These are supported funding model platforms
+
+github: # Replace with up to 4 GitHub Sponsors-enabled usernames e.g., [user1, user2]
+patreon: # Replace with a single Patreon username
+open_collective: # Replace with a single Open Collective username
+ko_fi: # Replace with a single Ko-fi username
+tidelift: # Replace with a single Tidelift platform-name/package-name e.g., npm/babel
+custom: # Replace with a single custom sponsorship URL
