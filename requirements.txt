@@ -1,9 +1,9 @@
 Flask
 line-bot-sdk
+gunicorn
 requests
-matplotlib
-numpy
-pytz
 pyimgur
-Pillow
+pillow
+matplotlib
+pytz
 
