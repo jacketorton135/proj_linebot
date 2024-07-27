@@ -2,34 +2,33 @@ import os
 import requests
 import json
 import matplotlib.pyplot as plt
+import numpy as np
 from datetime import datetime
 import pytz
 import pyimgur
 from PIL import Image
+from dotenv import load_dotenv
 
-class Thingspeak():
+load_dotenv()  # Load environment variables from .env file
+
+class Thingspeak:
     def get_data_from_thingspeak(self, channel_id, api_read_key):
         url = f'https://thingspeak.com/channels/{channel_id}/feed.json?api_key={api_read_key}'
         data = requests.get(url).json()
         if data.get('error') == 'Not Found':
             return 'Not Found', 'Not Found'
+        
         time_list = list()
-        bpm_list = list()
-        temperature_list = list()
-        humidity_list = list()
-        body_temperature_list = list()
-        ECG_list = list()
-        for data_point in data['feeds']:
-            time_list.append(data_point.get('created_at'))
-            bpm_list.append(data_point.get('field1'))
-            temperature_list.append(data_point.get('field2'))
-            humidity_list.append(data_point.get('field3'))
-            body_temperature_list.append(data_point.get('field4'))
-            ECG_list.append(data_point.get('field5'))
-
-        # 換成台灣時間
+        field_data = {f'field{i}': [] for i in range(1, 6)}
+        
+        for entry in data['feeds']:
+            time_list.append(entry.get('created_at'))
+            for i in range(1, 6):
+                field_data[f'field{i}'].append(entry.get(f'field{i}'))
+                
+        # Convert to Taiwan time
         tw_time_list = self.format_time(time_list)
-        return tw_time_list, bpm_list, temperature_list, humidity_list, body_temperature_list, ECG_list
+        return tw_time_list, field_data
     
     def format_time(self, time_list):
         taiwan_tz = pytz.timezone('Asia/Taipei')
@@ -41,69 +40,79 @@ class Thingspeak():
             tw_time_list.append(dt_taiwan.strftime('%Y-%m-%d %H:%M:%S'))
         return tw_time_list
     
-    def gen_chart(self, time_list, *field_lists):
-        labels = ['BPM', 'temperature', 'humidity', 'body temperature', 'ECG']
-        colors = ['r', 'g', 'b', 'y', 'm']
+    def gen_chart(self, time_list, field_data, field_name):
+        plt.figure(figsize=(12, 6))
+        field_values = []
+        valid_time_list = []
+        for time, value in zip(time_list, field_data[field_name]):
+            if value and value.strip():
+                field_values.append(float(value))
+                valid_time_list.append(time)
         
-        for i, (field_list, label) in enumerate(zip(field_lists, labels)):
-            field_list = [float(value) if value and value != '' else 0 for value in field_list]
-            plt.figure(figsize=(12, 6))
-            plt.plot(time_list, field_list, f'{colors[i]}-o', label=label)
-            plt.xlabel('Time')
-            plt.ylabel('Value')
-            plt.title(f'Thingspeak Data - {label}')
-            plt.xticks(rotation=45)
-            plt.legend()
-            plt.savefig(f'{label}_chart.jpg', format='jpg')
-            plt.close()
-
-    def update_photo_size(self):
-        for label in ['BPM', 'temperature', 'humidity', 'body temperature', 'ECG']:
-            img = Image.open(f'{label}_chart.jpg')
-            img_resized = img.resize((240, 240))
-            img_resized.save(f'pre_{label}_chart.jpg')
-
-    def upload_to_imgur(self):
-        CLIENT_ID = os.environ.get('IMGUR_CLIENT_ID')
-        urls = []
-        pre_urls = []
-        for label in ['BPM', 'temperature', 'humidity', 'body temperature', 'ECG']:
-            PATH = f'{label}_chart.jpg'
-            title = f"Uploaded with PyImgur - {label}"
-
-            im = pyimgur.Imgur(CLIENT_ID)
-            uploaded_image = im.upload_image(PATH, title=title)
-            urls.append(uploaded_image.link)
-
-            pre_PATH = f'pre_{label}_chart.jpg'
-            pre_title = f"Uploaded with pre_PyImgur - {label}"
-
-            pre_im = pyimgur.Imgur(CLIENT_ID)
-            uploaded_pre_image = pre_im.upload_image(pre_PATH, title=pre_title)
-            pre_urls.append(uploaded_pre_image.link)
+        plt.plot(valid_time_list, field_values, label=field_name)
         
-        return urls, pre_urls
+        plt.xlabel('Time')
+        plt.ylabel('Value')
+        plt.title(f'Thingspeak - {field_name}')
+        plt.legend()
+        plt.xticks(rotation=45)
+        chart_filename = f'{field_name}_chart.jpg'
+        plt.savefig(chart_filename, format='jpg')
+        plt.close()  # Close the plot to avoid overlapping of plots in successive calls
+        return chart_filename
     
-    def process_and_upload_all_fields(self, channel_id, api_read_key):
-        tw_time_list, bpm_list, temperature_list, humidity_list, body_temperature_list, ECG_list = self.get_data_from_thingspeak(channel_id, api_read_key)
-        if tw_time_list == 'Not Found' or bpm_list == 'Not Found':
-            return 'Not Found'
+    def update_photo_size(self, chart_filename):
+        img = Image.open(chart_filename)
+        img2 = img.resize((240, 240))
+        pre_chart_filename = f'pre_{chart_filename}'
+        img2.save(pre_chart_filename)
+        return pre_chart_filename
+    
+    def upload_to_imgur(self, chart_filename):
+        CLIENT_ID = os.getenv('IMGUR_CLIENT_ID')
+        if not CLIENT_ID:
+            raise ValueError("IMGUR_CLIENT_ID environment variable not set")
         
-        self.gen_chart(tw_time_list, bpm_list, temperature_list, humidity_list, body_temperature_list, ECG_list)
-        self.update_photo_size()
-        chart_links, pre_chart_links = self.upload_to_imgur()
+        if not os.path.exists(chart_filename):
+            raise FileNotFoundError(f"File {chart_filename} does not exist")
+        
+        title = "Uploaded with PyImgur"
+        
+        im = pyimgur.Imgur(CLIENT_ID)
+        uploaded_image = im.upload_image(chart_filename, title=title)
+        image_url = uploaded_image.link
+        
+        pre_chart_filename = self.update_photo_size(chart_filename)
+        
+        if not os.path.exists(pre_chart_filename):
+            raise FileNotFoundError(f"File {pre_chart_filename} does not exist")
+        
+        pre_im = pyimgur.Imgur(CLIENT_ID)
+        uploaded_pre_image = pre_im.upload_image(pre_chart_filename, title=title)
+        pre_image_url = uploaded_pre_image.link
+        
+        return image_url, pre_image_url
 
-        results = {
-            'BPM': {'image_url': chart_links[0], 'pre_image_url': pre_chart_links[0]},
-            'temperature': {'image_url': chart_links[1], 'pre_image_url': pre_chart_links[1]},
-            'humidity': {'image_url': chart_links[2], 'pre_image_url': pre_chart_links[2]},
-            'body_temperature': {'image_url': chart_links[3], 'pre_image_url': pre_chart_links[3]},
-            'ECG': {'image_url': chart_links[4], 'pre_image_url': pre_chart_links[4]},
-        }
+    def process_and_upload_all_fields(self, channel_id, api_read_key):
+        tw_time_list, field_data = self.get_data_from_thingspeak(channel_id, api_read_key)
+        if tw_time_list == 'Not Found' or field_data == 'Not Found':
+            return 'Not Found', 'Not Found'
+        
+        results = {}
+        for i in range(1, 6):
+            field_name = f'field{i}'
+            chart_filename = self.gen_chart(tw_time_list, field_data, field_name)
+            image_url, pre_image_url = self.upload_to_imgur(chart_filename)
+            results[field_name] = {
+                'image_url': image_url,
+                'pre_image_url': pre_image_url
+            }
         return results
 
 if __name__ == "__main__":
     ts = Thingspeak()
     results = ts.process_and_upload_all_fields("2466473", "GROLYCVTU08JWN8Q")
-    print(results)
+    for field, urls in results.items():
+        print(f'{field} Image URL: {urls["image_url"]}')
+        print(f'{field} Pre Image URL: {urls["pre_image_url"]}')   
 
