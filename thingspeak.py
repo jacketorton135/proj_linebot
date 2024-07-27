@@ -3,34 +3,33 @@ import requests
 import json
 import matplotlib.pyplot as plt
 import numpy as np
-from datetime import datetime, timedelta
+from datetime import datetime
 import pytz
 import pyimgur
-from imgurpython import ImgurClient
 from PIL import Image
+from dotenv import load_dotenv
 
-# from imgurpython import ImgurClient
+load_dotenv()  # Load environment variables from .env file
 
-
-class Thingspeak():
+class Thingspeak:
     def get_data_from_thingspeak(self, channel_id, api_read_key):
-        url = 'https://thingspeak.com/channels/{channel_id}/feed.json?api_key={api_read_key}'.format(channel_id = channel_id,api_read_key = api_read_key)
+        url = f'https://thingspeak.com/channels/{channel_id}/feed.json?api_key={api_read_key}'
         data = requests.get(url).json()
         if data.get('error') == 'Not Found':
             return 'Not Found', 'Not Found'
+        
         time_list = list()
-        entry_id_list = list()
-        bpm_list = list()
-        for data in data['feeds']:
-            time_list.append(data.get('created_at'))
-            entry_id_list.append(data.get('entry_id'))
-            bpm_list.append(data.get('field1'))
-
-        #換成台灣時間
+        field_data = {f'field{i}': [] for i in range(1, 6)}
+        
+        for entry in data['feeds']:
+            time_list.append(entry.get('created_at'))
+            for i in range(1, 6):
+                field_data[f'field{i}'].append(entry.get(f'field{i}'))
+                
+        # Convert to Taiwan time
         tw_time_list = self.format_time(time_list)
-        return tw_time_list, bpm_list
+        return tw_time_list, field_data
     
-    # 解析时间字符串并转换为台湾时间
     def format_time(self, time_list):
         taiwan_tz = pytz.timezone('Asia/Taipei')
         tw_time_list = []
@@ -41,49 +40,79 @@ class Thingspeak():
             tw_time_list.append(dt_taiwan.strftime('%Y-%m-%d %H:%M:%S'))
         return tw_time_list
     
-    # 從 JSON 數據中提取數字並繪製折線圖
-    def gen_chart(self, time_list, bpm_list):
-        print(time_list, bpm_list)
-        plt.figure(figsize=(12, 15))  # 設置圖片尺寸為 10x6
-        bpm_list = [float(value) for value in bpm_list]
-        # 绘制图表
-        plt.plot(time_list, bpm_list, 'r-o')
-        plt.xlabel('Time')
-        plt.ylabel('BPM')
-        plt.title('Thingspeak')
-        plt.xticks(rotation=45)
-        plt.savefig('chart.jpg', format='jpg')
-        return 
-    
-    def update_photo_size(self):
-        img = Image.open('chart.jpg')   # 開啟圖片
-        img2 = img.resize((240,240))       # 調整圖片尺寸為 200x200
-        img2.save('pre_chart.jpg')   
-
-    # 上傳圖片到 Imgur
-    def upload_to_imgur(self):
-        CLIENT_ID = os.environ.get('IMGUR_CLIENT_ID')
-        PATH = "chart.jpg" #A Filepath to an image on your computer"
-        title = "Uploaded with PyImgur"
-
-        im = pyimgur.Imgur(CLIENT_ID)
-        uploaded_image = im.upload_image(PATH, title=title)
-        image_url = uploaded_image.link
-
-        PATH = "pre_chart.jpg" #A Filepath to an image on your computer"
-        title = "Uploaded with pre_PyImgur"
-
-        pre_im = pyimgur.Imgur(CLIENT_ID)
-        uploaded_pre_image = pre_im.upload_image(PATH, title=title)
-        # print(uploaded_image.title)
-        pre_image_url = uploaded_pre_image.link
-        return  image_url, pre_image_url
-
+    def gen_chart(self, time_list, field_data, field_name):
+        plt.figure(figsize=(12, 6))
+        field_values = []
+        valid_time_list = []
+        for time, value in zip(time_list, field_data[field_name]):
+            if value and value.strip():
+                field_values.append(float(value))
+                valid_time_list.append(time)
         
+        plt.plot(valid_time_list, field_values, label=field_name)
+        
+        plt.xlabel('Time')
+        plt.ylabel('Value')
+        plt.title(f'Thingspeak - {field_name}')
+        plt.legend()
+        plt.xticks(rotation=45)
+        chart_filename = f'{field_name}_chart.jpg'
+        plt.savefig(chart_filename, format='jpg')
+        plt.close()  # Close the plot to avoid overlapping of plots in successive calls
+        return chart_filename
+    
+    def update_photo_size(self, chart_filename):
+        img = Image.open(chart_filename)
+        img2 = img.resize((240, 240))
+        pre_chart_filename = f'pre_{chart_filename}'
+        img2.save(pre_chart_filename)
+        return pre_chart_filename
+    
+    def upload_to_imgur(self, chart_filename):
+        CLIENT_ID = os.getenv('IMGUR_CLIENT_ID')
+        if not CLIENT_ID:
+            raise ValueError("IMGUR_CLIENT_ID environment variable not set")
+        
+        if not os.path.exists(chart_filename):
+            raise FileNotFoundError(f"File {chart_filename} does not exist")
+        
+        title = "Uploaded with PyImgur"
+        
+        im = pyimgur.Imgur(CLIENT_ID)
+        uploaded_image = im.upload_image(chart_filename, title=title)
+        image_url = uploaded_image.link
+        
+        pre_chart_filename = self.update_photo_size(chart_filename)
+        
+        if not os.path.exists(pre_chart_filename):
+            raise FileNotFoundError(f"File {pre_chart_filename} does not exist")
+        
+        pre_im = pyimgur.Imgur(CLIENT_ID)
+        uploaded_pre_image = pre_im.upload_image(pre_chart_filename, title=title)
+        pre_image_url = uploaded_pre_image.link
+        
+        return image_url, pre_image_url
+
+    def process_and_upload_all_fields(self, channel_id, api_read_key):
+        tw_time_list, field_data = self.get_data_from_thingspeak(channel_id, api_read_key)
+        if tw_time_list == 'Not Found' or field_data == 'Not Found':
+            return 'Not Found', 'Not Found'
+        
+        results = {}
+        for i in range(1, 6):
+            field_name = f'field{i}'
+            chart_filename = self.gen_chart(tw_time_list, field_data, field_name)
+            image_url, pre_image_url = self.upload_to_imgur(chart_filename)
+            results[field_name] = {
+                'image_url': image_url,
+                'pre_image_url': pre_image_url
+            }
+        return results
+
 if __name__ == "__main__":
     ts = Thingspeak()
-    tw_time_list, bpm_list=ts.get_data_from_thingspeak("2374700","2KNDBSF9FN4M5EY1")
-    ts.gen_chart(tw_time_list, bpm_list)
-    ts.update_photo_size()
-    ts.upload()
+    results = ts.process_and_upload_all_fields("2466473", "GROLYCVTU08JWN8Q")
+    for field, urls in results.items():
+        print(f'{field} Image URL: {urls["image_url"]}')
+        print(f'{field} Pre Image URL: {urls["pre_image_url"]}') 
 
